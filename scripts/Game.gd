@@ -21,8 +21,9 @@ func _on_stage_changed():
     pass
 
 func _set_score_best(new_value):
-    score_best = new_value
-    emit_signal("score_best_changed")
+    if new_value > score_best:
+        score_best = new_value
+        emit_signal("score_best_changed")
     pass
 
 func _set_score_current(new_value):
