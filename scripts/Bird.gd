@@ -26,6 +26,11 @@ func _input(event):
     state.input(event)
     pass
 
+func _unhandled_input(event): # Handles inputs not used by any node on the scene.
+    if state.has_method("unhandled_input"):
+        state.unhandled_input(event)
+    pass
+
 func _on_body_enter(other_body):
     if state.has_method("on_body_enter"):
         state.on_body_enter(other_body)
@@ -112,6 +117,14 @@ class FlappingState:
 #            if  event.scancode == KEY_SPACE:
 #                print("Key event")
         if event.is_action_pressed("flap"):
+            flap()
+        pass
+
+    func unhandled_input(event):
+        if !event is InputEventMouseButton or !event.is_pressed() or event.is_echo():
+            return
+
+        if event.button_index == BUTTON_LEFT:
             flap()
         pass
 
