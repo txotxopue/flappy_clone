@@ -50,6 +50,7 @@ func spawn_and_move():
 func spawn_pipe():
     var new_pipe = scn_pipe.instance()
     new_pipe.position = position
+    new_pipe.z_index = -1
     new_pipe.connect("tree_exited", self, "spawn_and_move")
     get_node("Container").add_child(new_pipe)
     pass

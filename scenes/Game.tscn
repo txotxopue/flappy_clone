@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=2]
+[gd_scene load_steps=42 format=2]
 
 [ext_resource path="res://prefabs/Background.tscn" type="PackedScene" id=1]
 [ext_resource path="res://prefabs/Bird.tscn" type="PackedScene" id=2]
@@ -7,18 +7,66 @@
 [ext_resource path="res://prefabs/SpawnerPipe.tscn" type="PackedScene" id=5]
 [ext_resource path="res://sprites/instructions.png" type="Texture" id=6]
 [ext_resource path="res://sprites/number_large_0.png" type="Texture" id=7]
-[ext_resource path="res://sprites/label_game_over.png" type="Texture" id=8]
-[ext_resource path="res://sprites/panel_score.png" type="Texture" id=9]
-[ext_resource path="res://sprites/number_medium_0.png" type="Texture" id=10]
-[ext_resource path="res://sprites/label_new.png" type="Texture" id=11]
-[ext_resource path="res://sprites/medal_bronze.png" type="Texture" id=12]
-[ext_resource path="res://sprites/spark_0.png" type="Texture" id=13]
-[ext_resource path="res://sprites/spark_1.png" type="Texture" id=14]
-[ext_resource path="res://sprites/spark_2.png" type="Texture" id=15]
-[ext_resource path="res://sprites/button_play_normal.png" type="Texture" id=16]
-[ext_resource path="res://sprites/button_play_pressed.png" type="Texture" id=17]
-[ext_resource path="res://sprites/button_score_normal.png" type="Texture" id=18]
-[ext_resource path="res://sprites/button_score_pressed.png" type="Texture" id=19]
+[ext_resource path="res://sprites/button_pause.png" type="Texture" id=8]
+[ext_resource path="res://sprites/label_game_over.png" type="Texture" id=9]
+[ext_resource path="res://sprites/panel_score.png" type="Texture" id=10]
+[ext_resource path="res://sprites/number_medium_0.png" type="Texture" id=11]
+[ext_resource path="res://sprites/label_new.png" type="Texture" id=12]
+[ext_resource path="res://sprites/medal_bronze.png" type="Texture" id=13]
+[ext_resource path="res://sprites/spark_0.png" type="Texture" id=14]
+[ext_resource path="res://sprites/spark_1.png" type="Texture" id=15]
+[ext_resource path="res://sprites/spark_2.png" type="Texture" id=16]
+[ext_resource path="res://sprites/button_play_normal.png" type="Texture" id=17]
+[ext_resource path="res://sprites/button_play_pressed.png" type="Texture" id=18]
+[ext_resource path="res://sprites/button_score_normal.png" type="Texture" id=19]
+[ext_resource path="res://sprites/button_score_pressed.png" type="Texture" id=20]
+[ext_resource path="res://sprites/rect_black.png" type="Texture" id=21]
+[ext_resource path="res://sprites/button_resume.png" type="Texture" id=22]
+[ext_resource path="res://sprites/button_menu.png" type="Texture" id=23]
+
+[sub_resource type="GDScript" id=18]
+
+resource_name = "Shaker"
+script/source = "# Shaker (built-in)
+
+extends Node
+
+onready var camera = get_parent()
+
+const duration  = 0.18
+const magnitude = 3
+
+var time = 0
+
+func _ready():
+    var bird = Utils.get_main_node().get_node(\"Bird\")
+    if bird:
+        bird.connect(\"state_changed\", self, \"_on_bird_state_changed\")
+    pass
+
+func _on_bird_state_changed(bird):
+    if bird.state == bird.STATE_HIT || bird.state == bird.STATE_GROUNDED:
+        shake()
+        bird.disconnect(\"state_changed\", self, \"_on_bird_state_changed\") # Disconnect to shake just when hit or grounded the first time.
+    pass
+
+func shake():
+    var initial_offset = camera.offset
+    while time < duration:
+        time += get_process_delta_time()
+        time = min(time, duration)
+
+        var offset = Vector2()
+        offset.x = rand_range(-magnitude, magnitude)
+        offset.y = rand_range(-magnitude, magnitude)
+        camera.offset = initial_offset + offset
+
+        yield(get_tree(), \"idle_frame\")
+        pass
+    time = 0
+    camera.offset = initial_offset
+    pass"
+_sections_unfolded = [ "Resource" ]
 
 [sub_resource type="GDScript" id=1]
 
@@ -74,8 +122,8 @@ func _on_score_current_changed():
     pass
 
 func _on_bird_state_changed(bird):
-    if bird.get_state() == bird.STATE_GROUNDED:
-        hide()
+    if bird.get_state() == bird.STATE_HIT     : hide()
+    if bird.get_state() == bird.STATE_GROUNDED: hide()
     pass
 
 func set_number(number):
@@ -88,6 +136,31 @@ func set_number(number):
         texture_rect.set_texture(sprite_numbers[digit])
         texture_rect.mouse_filter = MOUSE_FILTER_IGNORE # Ignore Mouse clicks. Should set this every time we create a Control.
         add_child(texture_rect)
+    pass"
+_sections_unfolded = [ "Resource" ]
+
+[sub_resource type="GDScript" id=14]
+
+resource_name = "ButtonPause"
+script/source = "# ButtonPause (built-in)
+
+extends TextureButton
+
+func _ready():
+    connect(\"pressed\", self, \"_on_pressed\")
+
+    var bird = Utils.get_main_node().get_node(\"Bird\")
+    if bird:
+        bird.connect(\"state_changed\", self, \"_on_bird_state_changed\")
+    pass
+
+func _on_pressed():
+    get_tree().set_pause(true)
+    pass
+
+func _on_bird_state_changed(bird):
+    if bird.get_state() == bird.STATE_HIT:      hide()
+    if bird.get_state() == bird.STATE_GROUNDED: hide()
     pass"
 _sections_unfolded = [ "Resource" ]
 
@@ -264,7 +337,7 @@ _sections_unfolded = [ "Resource" ]
 [sub_resource type="SpriteFrames" id=8]
 
 animations = [ {
-"frames": [ ExtResource( 13 ), ExtResource( 14 ), ExtResource( 15 ) ],
+"frames": [ ExtResource( 14 ), ExtResource( 15 ), ExtResource( 16 ) ],
 "loop": true,
 "name": "default",
 "speed": 5.0
@@ -434,7 +507,69 @@ tracks/4/keys = {
 } ]
 }
 
-[node name="Node2D" type="Node2D"]
+[sub_resource type="GDScript" id=15]
+
+resource_name = "ContainerPause"
+script/source = "# ContainerPause (built-in)
+
+extends Container
+
+func _ready():
+    hide()
+
+    var button_pause = Utils.get_main_node().find_node(\"ButtonPause\")
+    if button_pause:
+        button_pause.connect(\"pressed\", self, \"_on_pause\")
+
+    var button_resume = Utils.get_main_node().find_node(\"ButtonResume\")
+    if button_resume:
+        button_resume.connect(\"pressed\", self, \"_on_resume\")
+    pass
+
+func _on_pause():
+    show()
+    pass
+
+func _on_resume():
+    hide()
+    pass"
+_sections_unfolded = [ "Resource" ]
+
+[sub_resource type="GDScript" id=16]
+
+resource_name = "ButtonResume"
+script/source = "# ButtonResume (built-in)
+
+extends TextureButton
+
+func _ready():
+    connect(\"pressed\", self, \"_on_pressed\")
+    pass
+
+func _on_pressed():
+    get_tree().set_pause(false)
+    pass"
+_sections_unfolded = [ "Resource" ]
+
+[sub_resource type="GDScript" id=17]
+
+resource_name = "ButtonMenu"
+script/source = "# ButtonMenu (built-in)
+
+extends TextureButton
+
+func _ready():
+    connect(\"pressed\", self, \"_on_pressed\")
+    pass
+
+func _on_pressed():
+    get_tree().paused = false
+    StageManager.change_stage(StageManager.STAGE_MENU)
+    pass
+"
+_sections_unfolded = [ "Resource" ]
+
+[node name="Node2D" type="Node2D" index="0"]
 
 [node name="Background" parent="." index="0" instance=ExtResource( 1 )]
 
@@ -458,6 +593,8 @@ drag_margin_h_enabled = true
 drag_margin_v_enabled = true
 smoothing_enabled = false
 smoothing_speed = 5.0
+offset_v = 0.0
+offset_h = 0.0
 drag_margin_left = 0.2
 drag_margin_top = 0.2
 drag_margin_right = 0.2
@@ -466,6 +603,10 @@ editor_draw_screen = true
 editor_draw_limits = false
 editor_draw_drag_margin = false
 script = ExtResource( 3 )
+
+[node name="Shaker" type="Node" parent="Camera" index="0"]
+
+script = SubResource( 18 )
 
 [node name="SpawnerGround" parent="." index="3" instance=ExtResource( 4 )]
 
@@ -481,6 +622,7 @@ layer = 1
 offset = Vector2( 0, 0 )
 rotation = 0.0
 scale = Vector2( 1, 1 )
+transform = Transform2D( 1, 0, 0, 1, 0, 0 )
 
 [node name="BtnInstructions" type="TextureButton" parent="HUD" index="0"]
 
@@ -492,7 +634,9 @@ anchor_bottom = 0.0
 margin_right = 144.0
 margin_bottom = 256.0
 rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
 mouse_filter = 0
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 toggle_mode = false
@@ -515,6 +659,7 @@ margin_right = 101.0
 margin_bottom = 153.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 1
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 texture = ExtResource( 6 )
@@ -523,6 +668,7 @@ _sections_unfolded = [ "Rect" ]
 
 [node name="HBoxScore" type="HBoxContainer" parent="HUD" index="1"]
 
+editor/display_folded = true
 anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 0.0
@@ -532,6 +678,7 @@ margin_right = 144.0
 margin_bottom = 28.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 2
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 custom_constants/separation = 2
@@ -550,15 +697,41 @@ margin_right = 78.0
 margin_bottom = 18.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 2
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 texture = ExtResource( 7 )
 stretch_mode = 0
 _sections_unfolded = [ "Mouse" ]
 
-[node name="ContainerGameOver" type="Container" parent="HUD" index="2"]
+[node name="ButtonPause" type="TextureButton" parent="HUD" index="2"]
+
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 10.0
+margin_top = 10.0
+margin_right = 23.0
+margin_bottom = 24.0
+rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
+mouse_filter = 0
+mouse_default_cursor_shape = 0
+size_flags_horizontal = 1
+size_flags_vertical = 1
+toggle_mode = false
+enabled_focus_mode = 2
+shortcut = null
+group = null
+texture_normal = ExtResource( 8 )
+script = SubResource( 14 )
+_sections_unfolded = [ "Rect", "Textures" ]
+
+[node name="ContainerGameOver" type="Container" parent="HUD" index="3"]
 
 editor/display_folded = true
+visible = false
 anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 0.0
@@ -567,6 +740,7 @@ margin_right = 144.0
 margin_bottom = 256.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 0
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 script = SubResource( 3 )
@@ -584,9 +758,10 @@ margin_right = 120.0
 margin_bottom = 71.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 1
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
-texture = ExtResource( 8 )
+texture = ExtResource( 9 )
 stretch_mode = 0
 _sections_unfolded = [ "Rect", "Visibility" ]
 
@@ -603,9 +778,10 @@ margin_right = 129.0
 margin_bottom = 147.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 1
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
-texture = ExtResource( 9 )
+texture = ExtResource( 10 )
 stretch_mode = 0
 _sections_unfolded = [ "Rect" ]
 
@@ -622,6 +798,7 @@ margin_right = 102.0
 margin_bottom = 27.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 1
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 custom_constants/separation = 1
@@ -640,9 +817,10 @@ margin_right = 40.0
 margin_bottom = 10.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 1
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
-texture = ExtResource( 10 )
+texture = ExtResource( 11 )
 stretch_mode = 0
 
 [node name="HBoxScoreBest" type="HBoxContainer" parent="HUD/ContainerGameOver/TexturePanelScore" index="1"]
@@ -658,6 +836,7 @@ margin_right = 102.0
 margin_bottom = 48.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 1
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 custom_constants/separation = 1
@@ -676,9 +855,10 @@ margin_right = 40.0
 margin_bottom = 10.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 1
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
-texture = ExtResource( 10 )
+texture = ExtResource( 11 )
 stretch_mode = 0
 
 [node name="TextureNew" type="TextureRect" parent="HUD/ContainerGameOver/TexturePanelScore" index="2"]
@@ -693,9 +873,10 @@ margin_right = 83.0
 margin_bottom = 36.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 1
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
-texture = ExtResource( 11 )
+texture = ExtResource( 12 )
 stretch_mode = 0
 script = SubResource( 6 )
 
@@ -712,9 +893,10 @@ margin_right = 35.0
 margin_bottom = 43.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 1
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
-texture = ExtResource( 12 )
+texture = ExtResource( 13 )
 stretch_mode = 0
 script = SubResource( 7 )
 
@@ -727,14 +909,13 @@ script = SubResource( 9 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="HUD/ContainerGameOver/TexturePanelScore/TextureMedal/SpriteSpark" index="0"]
 
+root_node = NodePath("..")
+autoplay = ""
 playback_process_mode = 1
 playback_default_blend_time = 0.0
-root_node = NodePath("..")
+playback_speed = 1.0
 anims/shine = SubResource( 10 )
-playback/active = true
-playback/speed = 0.8
 blend_times = [  ]
-autoplay = ""
 _sections_unfolded = [ "Playback Options", "playback" ]
 
 [node name="HBoxButtons" type="HBoxContainer" parent="HUD/ContainerGameOver" index="2"]
@@ -750,6 +931,7 @@ margin_right = 129.0
 margin_bottom = 189.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 1
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 custom_constants/separation = 9
@@ -766,15 +948,17 @@ anchor_bottom = 0.0
 margin_right = 52.0
 margin_bottom = 29.0
 rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
 mouse_filter = 0
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 toggle_mode = false
 enabled_focus_mode = 2
 shortcut = null
 group = null
-texture_normal = ExtResource( 16 )
-texture_pressed = ExtResource( 17 )
+texture_normal = ExtResource( 17 )
+texture_pressed = ExtResource( 18 )
 script = SubResource( 12 )
 _sections_unfolded = [ "Textures" ]
 
@@ -788,27 +972,112 @@ margin_left = 61.0
 margin_right = 113.0
 margin_bottom = 29.0
 rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
 mouse_filter = 0
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 toggle_mode = false
 enabled_focus_mode = 2
 shortcut = null
 group = null
-texture_normal = ExtResource( 18 )
-texture_pressed = ExtResource( 19 )
+texture_normal = ExtResource( 19 )
+texture_pressed = ExtResource( 20 )
 _sections_unfolded = [ "Textures" ]
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="HUD/ContainerGameOver" index="3"]
 
+root_node = NodePath("..")
+autoplay = ""
 playback_process_mode = 1
 playback_default_blend_time = 0.0
-root_node = NodePath("..")
+playback_speed = 1.0
 anims/show = SubResource( 13 )
-playback/active = true
-playback/speed = 1.0
 blend_times = [  ]
-autoplay = ""
 _sections_unfolded = [ "playback" ]
+
+[node name="ContainerPause" type="Container" parent="HUD" index="4"]
+
+pause_mode = 2
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 144.0
+margin_bottom = 256.0
+rect_pivot_offset = Vector2( 0, 0 )
+mouse_filter = 0
+mouse_default_cursor_shape = 0
+size_flags_horizontal = 1
+size_flags_vertical = 1
+script = SubResource( 15 )
+_sections_unfolded = [ "Pause", "Rect" ]
+
+[node name="TextureBackground" type="TextureRect" parent="HUD/ContainerPause" index="0"]
+
+modulate = Color( 1, 1, 1, 0.333333 )
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 144.0
+margin_bottom = 256.0
+rect_pivot_offset = Vector2( 0, 0 )
+mouse_filter = 1
+mouse_default_cursor_shape = 0
+size_flags_horizontal = 1
+size_flags_vertical = 1
+texture = ExtResource( 21 )
+expand = true
+stretch_mode = 0
+_sections_unfolded = [ "Rect", "Visibility" ]
+
+[node name="ButtonResume" type="TextureButton" parent="HUD/ContainerPause" index="1"]
+
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 10.0
+margin_top = 10.0
+margin_right = 23.0
+margin_bottom = 24.0
+rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
+mouse_filter = 0
+mouse_default_cursor_shape = 0
+size_flags_horizontal = 1
+size_flags_vertical = 1
+toggle_mode = false
+enabled_focus_mode = 2
+shortcut = null
+group = null
+texture_normal = ExtResource( 22 )
+script = SubResource( 16 )
+_sections_unfolded = [ "Rect", "Textures" ]
+
+[node name="ButtonMenu" type="TextureButton" parent="HUD/ContainerPause" index="2"]
+
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 52.0
+margin_top = 121.0
+margin_right = 92.0
+margin_bottom = 135.0
+rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
+mouse_filter = 0
+mouse_default_cursor_shape = 0
+size_flags_horizontal = 1
+size_flags_vertical = 1
+toggle_mode = false
+enabled_focus_mode = 2
+shortcut = null
+group = null
+texture_normal = ExtResource( 23 )
+script = SubResource( 17 )
+_sections_unfolded = [ "Pause", "Rect", "Textures" ]
 
 

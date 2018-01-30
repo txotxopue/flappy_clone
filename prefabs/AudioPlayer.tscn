@@ -1,0 +1,65 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="GDScript" id=2]
+
+resource_name = "AudioPlayer"
+script/source = "# AudioPlayer (built-in)
+
+extends Node
+
+var WING_STREAM      = preload(\"res://audio/sfx_wing.wav\")
+var HIT_STREAM       = preload(\"res://audio/sfx_hit.wav\")
+var DIE_STREAM       = preload(\"res://audio/sfx_die.wav\")
+var POINT_STREAM     = preload(\"res://audio/sfx_point.wav\")
+var SWOOSHING_STREAM = preload(\"res://audio/sfx_swooshing.wav\")
+
+func _ready():
+    pass
+
+func play_stream(stream):
+    if $AudioStreamPlayerA.is_playing():
+        if $AudioStreamPlayerB.is_playing():
+            if $AudioStreamPlayerC.is_playing():
+                $AudioStreamPlayerA.stream = stream
+                $AudioStreamPlayerA.play()
+            else:
+                $AudioStreamPlayerC.stream = stream
+                $AudioStreamPlayerC.play()
+        else:
+            $AudioStreamPlayerB.stream = stream
+            $AudioStreamPlayerB.play()
+    else:
+        $AudioStreamPlayerA.stream = stream
+        $AudioStreamPlayerA.play()
+    pass"
+_sections_unfolded = [ "Resource" ]
+
+[node name="AudioPlayer" type="Node" index="0"]
+
+script = SubResource( 2 )
+
+[node name="AudioStreamPlayerA" type="AudioStreamPlayer" parent="." index="0"]
+
+stream = null
+volume_db = 0.0
+autoplay = false
+mix_target = 0
+bus = "Master"
+
+[node name="AudioStreamPlayerB" type="AudioStreamPlayer" parent="." index="1"]
+
+stream = null
+volume_db = 0.0
+autoplay = false
+mix_target = 0
+bus = "Master"
+
+[node name="AudioStreamPlayerC" type="AudioStreamPlayer" parent="." index="2"]
+
+stream = null
+volume_db = 0.0
+autoplay = false
+mix_target = 0
+bus = "Master"
+
+

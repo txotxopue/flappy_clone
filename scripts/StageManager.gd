@@ -3,6 +3,7 @@
 extends CanvasLayer
 
 const STAGE_GAME = "res://scenes/Game.tscn"
+const STAGE_MENU = "res://scenes/MainMenu.tscn"
 
 var is_changing = false
 
@@ -21,6 +22,7 @@ func change_stage(stage_path):
 
     # Fade to black.
     get_node("AnimationPlayer").play("fade_in")
+    AudioPlayer.play_stream(AudioPlayer.SWOOSHING_STREAM)
     yield(get_node("AnimationPlayer"), "animation_finished")
 
     # Change stage.

@@ -21,6 +21,7 @@ extends TextureButton
 
 func _ready():
     connect(\"pressed\", self, \"_on_pressed\")
+    grab_focus() # Give focus to the button, so it can be activated when space too.
     pass
 
 func _on_pressed():
@@ -29,7 +30,7 @@ func _on_pressed():
 "
 _sections_unfolded = [ "Resource" ]
 
-[node name="MainMenu" type="Node" index="0"]
+[node name="MainMenu" type="Node"]
 
 [node name="Camera" type="Camera2D" parent="." index="0"]
 
@@ -47,6 +48,8 @@ drag_margin_h_enabled = true
 drag_margin_v_enabled = true
 smoothing_enabled = false
 smoothing_speed = 5.0
+offset_v = 0.0
+offset_h = 0.0
 drag_margin_left = 0.2
 drag_margin_top = 0.2
 drag_margin_right = 0.2
@@ -63,6 +66,8 @@ position = Vector2( 72, 110 )
 
 [node name="SpawnerGround" parent="." index="2" instance=ExtResource( 3 )]
 
+_sections_unfolded = [ "Transform", "Z Index" ]
+
 [node name="Background" parent="." index="3" instance=ExtResource( 4 )]
 
 [node name="HUD" type="CanvasLayer" parent="." index="4"]
@@ -71,6 +76,7 @@ layer = 1
 offset = Vector2( 0, 0 )
 rotation = 0.0
 scale = Vector2( 1, 1 )
+transform = Transform2D( 1, 0, 0, 1, 0, 0 )
 
 [node name="TextureFlappyBird" type="TextureRect" parent="HUD" index="0"]
 
@@ -84,6 +90,7 @@ margin_right = 117.0
 margin_bottom = 94.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 1
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 texture = ExtResource( 5 )
@@ -101,7 +108,9 @@ margin_top = 135.0
 margin_right = 88.0
 margin_bottom = 153.0
 rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
 mouse_filter = 0
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 toggle_mode = false
@@ -124,6 +133,7 @@ margin_right = 129.0
 margin_bottom = 189.0
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 1
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 custom_constants/separation = 9
@@ -139,7 +149,9 @@ anchor_bottom = 0.0
 margin_right = 52.0
 margin_bottom = 29.0
 rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
 mouse_filter = 0
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 toggle_mode = false
@@ -161,7 +173,9 @@ margin_left = 61.0
 margin_right = 113.0
 margin_bottom = 29.0
 rect_pivot_offset = Vector2( 0, 0 )
+focus_mode = 2
 mouse_filter = 0
+mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 toggle_mode = false
